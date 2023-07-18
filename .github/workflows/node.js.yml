@@ -10,8 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
-
+  lint:
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,12 +19,60 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
+    - name: Checkout repository
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}    
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    - name: Run lint
+      run: npm run lint       
+
+  test:
+
+    depends-on: lint
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - name: Checkout repository
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}    
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    - name: Run Test
+      run: npm test
+  
+  build:
+    runs-on: ubuntu-latest
+
+    depends-on: test
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - name: Checkout repository    
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
+    - name: Install dependencies
+      run: npm ci
+    - name: Build
     - run: npm run build --if-present
     - run: npm test
